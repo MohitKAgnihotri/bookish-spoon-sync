@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "server.h"
 #include "types.h"
+#include "parallelmergesort.h"
 
 #define BACKLOG 10
 #define PORT_NUM 1313
@@ -96,6 +97,7 @@ int main(int argc, char *argv[])
         received_sort_request = (sort_request_t *)buffer;
         received_sort_request->integers = (unsigned int *)(buffer + sizeof(sort_request_t));
 
+        process_parallel_merge(received_sort_request);
         print_sorted_response(received_sort_request);
 
         write(p[1],&signal,sizeof(int)); //signaling the parent process for next instruction
@@ -136,7 +138,6 @@ int main(int argc, char *argv[])
     }
 
     while (1) {
-
       /* Accept connection to client. */
       client_address_len = sizeof (client_address);
       new_socket_fd = accept(server_socket_fd, (struct sockaddr *)&client_address, &client_address_len);
@@ -154,9 +155,7 @@ int main(int argc, char *argv[])
         continue;
       }
     }
-
   }
-
   return 0;
 }
 
