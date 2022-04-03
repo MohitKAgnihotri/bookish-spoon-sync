@@ -14,6 +14,27 @@
 #define BACKLOG 10
 #define PORT_NUM 1313
 
+int p[2];
+int p1[2];
+
+void print_sorted_response(sort_request_t *client_sort_response)
+{
+  printf("\n");
+  printf("======================= CID=%d, file=%s, N=%d \n", client_sort_response->client_id, client_sort_response->filename, client_sort_response->number_of_integers);
+
+  for (int i = 0; i < client_sort_response->number_of_integers; i++)
+  {
+    printf("%d ", client_sort_response->integers[i]);
+    if (i % 10 == 0 && i != 0)
+    {
+      printf("\n");
+    }
+  }
+  printf("\n\n");
+}
+
+pthread_mutex_t mutex;
+
 /* Thread routine to serve connection to client. */
 void *pthread_routine(void *arg);
 
@@ -26,11 +47,21 @@ int CreateServerSocket(int port);
 
 int server_socket_fd;
 
+int write_to_pipe(int fd, char *buf, int len)
+{
+  pthread_mutex_lock(&mutex);
+  int ret = write(fd, buf, len);
+  pthread_mutex_unlock(&mutex);
+  return ret;
+}
+
+
 int main(int argc, char *argv[])
 {
   pid_t pid;
-  int p[2];
-  int p1[2];
+
+  pthread_mutex_init(&mutex, NULL);
+
   pipe(p); //for child process
   pipe(p1); //for parent process
 
@@ -56,8 +87,17 @@ int main(int argc, char *argv[])
       }
       else if (pipe_data.command == CMD_SORT)
       {
-        sort_request_t received_sort_request;
-        read(p1[0],&received_sort_request,pipe_data.data_size); //reading the sort request
+        sort_request_t *received_sort_request;
+        int buffer_size = sizeof(sort_request_t) + (sizeof(unsigned int) * MAX_SORT_INTEGER);
+        char *buffer = malloc(buffer_size);
+
+        read(p1[0],buffer,buffer_size); //reading the sort request
+
+        received_sort_request = (sort_request_t *)buffer;
+        received_sort_request->integers = (unsigned int *)(buffer + sizeof(sort_request_t));
+
+        print_sorted_response(received_sort_request);
+
         write(p[1],&signal,sizeof(int)); //signaling the parent process for next instruction
       }
     }
@@ -117,8 +157,6 @@ int main(int argc, char *argv[])
 
   }
 
-
-
   return 0;
 }
 
@@ -174,21 +212,7 @@ void SetupSignalHandler() {/* Assign signal handlers to signals. */
   }
 }
 
-void print_sorted_response(sort_request_t *client_sort_response)
-{
-  printf("\n");
-  printf("======================= CID=%d, file=%s, N=%d \n", client_sort_response->client_id, client_sort_response->filename, client_sort_response->number_of_integers);
 
-  for (int i = 0; i < client_sort_response->number_of_integers; i++)
-  {
-    printf("%d ", client_sort_response->integers[i]);
-    if (i % 10 == 0 && i != 0)
-    {
-      printf("\n");
-    }
-  }
-  printf("\n\n");
-}
 
 void *pthread_routine(void *arg)
 {
@@ -226,6 +250,14 @@ void *pthread_routine(void *arg)
 
   sort_request->integers = (unsigned int *) (buffer + sizeof(sort_request_t));
   print_sorted_response(sort_request);
+
+  pipe_data_t pipe_data = {
+  .command = CMD_SORT,
+  .data_size = sort_request->number_of_integers,
+  };
+
+  write_to_pipe(p1[1], (char*) &pipe_data, sizeof(pipe_data));
+  write_to_pipe(p1[1], buffer, read_size);
   free(buffer);
   return NULL;
 }
