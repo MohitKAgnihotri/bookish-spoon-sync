@@ -98,8 +98,6 @@ int main(int argc, char *argv[])
         received_sort_request->integers = (unsigned int *)(buffer + sizeof(sort_request_t));
 
         process_parallel_merge(received_sort_request);
-        print_sorted_response(received_sort_request);
-
         write(p[1],&signal,sizeof(int)); //signaling the parent process for next instruction
       }
     }
@@ -107,7 +105,6 @@ int main(int argc, char *argv[])
     close(p[1]); //closing the pipes
     close(p1[0]);
     return 0; //child process ends here
-
   }
   else
   {
@@ -248,7 +245,6 @@ void *pthread_routine(void *arg)
   }
 
   sort_request->integers = (unsigned int *) (buffer + sizeof(sort_request_t));
-  print_sorted_response(sort_request);
 
   pipe_data_t pipe_data = {
   .command = CMD_SORT,
