@@ -37,7 +37,8 @@ void print_sort_menu ( char* filename, uint32_t length )
   printf("Please enter the filename \n");
   get_line_from_stdin(filename, length);
 
-  if(access(filename, F_OK) != 0) {
+  if(access(filename, F_OK) != 0)
+  {
     printf("File does not exist\n");
     return;
   }
@@ -79,7 +80,6 @@ void process_sort_request(int socket_id, sort_request_t *request)
   memcpy(buffer, request, sizeof(sort_request_t));
   memcpy(buffer + sizeof(sort_request_t), request->integers, request->number_of_integers * sizeof(uint32_t));
 
-  print_sorted_response(request);
   if(send(socket_id, buffer, buffer_size, 0) < 0) {
     printf("Error sending data\n");
     return;
@@ -89,12 +89,6 @@ void process_sort_request(int socket_id, sort_request_t *request)
   free(request->integers);
   fclose(file);
 
-  /* Read Sorted Response from the server */
-  uint32_t response_size = 0;
-  if(recv(socket_id, &response_size, sizeof(uint32_t), 0) < 0) {
-    printf("Error receiving data\n");
-    return;
-  }
 }
 
 

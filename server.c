@@ -117,23 +117,32 @@ int main(int argc, char *argv[]) {
     int signal = 1; //Variable that will signal parent process to send next instruction
 
     while (true) {
-      read(p1[0], &pipe_data, sizeof(pipe_data)); //reading the instruction
 
-      if (pipe_data.command == CMD_END) {
+      /* Read incoming SORT Request */
+      read(p1[0], &pipe_data, sizeof(pipe_data));
+
+      if (pipe_data.command == CMD_END)
+      {
         write(p[1], &signal, sizeof(int)); //signal the parent
         break; //breaks the loop and exits
-      } else if (pipe_data.command == CMD_SORT) {
+      }
+      else if (pipe_data.command == CMD_SORT)
+      {
         sort_request_t *received_sort_request;
         int buffer_size = sizeof(sort_request_t) + (sizeof(unsigned int) * MAX_SORT_INTEGER);
         char *buffer = malloc(buffer_size);
 
+        /* Read the buffer with the actual data */
         read(p1[0], buffer, buffer_size); //reading the sort request
 
         received_sort_request = (sort_request_t *) buffer;
         received_sort_request->integers = (unsigned int *) (buffer + sizeof(sort_request_t));
 
+        /* Sort the incoming numbers*/
         process_parallel_merge(received_sort_request);
-        write(p[1], &signal, sizeof(int)); //signaling the parent process for next instruction
+
+        print_sorted_response(received_sort_request);
+        sem_post(semaphore_parent_child);
       }
     }
 
