@@ -1,0 +1,16 @@
+# -*- Makefile -*-
+all: cal.exe
+cal.exe: cal.o quadratic.o sum.o triples.o
+	g++ cal.o quadratic.o sum.o triples.o -o cal.exe
+
+cal.o: cal.cpp
+	g++ cal.cpp -c
+
+quadratic.o: quadratic.c
+	gcc quadratic.c -c
+
+sum.o: sum.c
+	gcc sum.c -c
+
+triples.o: triples.c
+	gcc triples.c -c

@@ -1,0 +1,4 @@
+#!/bin/bash
+make
+./cal.exe cal.in > cal.out
+./cal.exe cal.in | fgrep $1

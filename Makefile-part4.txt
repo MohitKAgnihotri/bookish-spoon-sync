@@ -1,0 +1,19 @@
+#-*- MakeFile -*-
+all: admin.exe
+admin.exe: admin.o cal-new.o quadratic.o sum.o triples.o
+	g++ admin.o cal-new.o quadratic.o sum.o triples.o -o admin.exe
+
+admin.o: admin.cpp
+	g++ admin.cpp -c
+
+cal.o: cal-new.cpp
+	g++ cal-new.cpp -c
+
+quadratic.o: quadratic.c
+	gcc quadratic.c -c
+
+sum.o: sum.c
+	gcc sum.c -c
+
+triples.o: triples.c
+	gcc triples.c -c
