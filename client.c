@@ -9,8 +9,6 @@
 #include <stdbool.h>
 #include "types.h"
 
-
-
 uint32_t client_id = 0;
 
 void get_line_from_stdin(char *line, uint32_t max_length)
